@@ -19,9 +19,10 @@ export const authConfig = {
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user
             const isAuthRoute = nextUrl.pathname.startsWith('/api/auth')
+            const isDebugRoute = nextUrl.pathname.startsWith('/api/debug')
             const isLoginPage = nextUrl.pathname === '/login'
 
-            if (isAuthRoute) return true
+            if (isAuthRoute || isDebugRoute) return true
             if (isLoggedIn && isLoginPage) {
                 return Response.redirect(new URL('/dashboard', nextUrl))
             }
