@@ -11,9 +11,9 @@ La aplicación usa un esquema de monorepositorio administrado por `turbo`. Separ
 ```text
 GobPlatform/
 ├── apps/
-│   ├── portal/        (Next.js App Router — Puerto 4000)
-│   ├── backoffice/    (Next.js App Router — Puerto 4001)
-│   └── supervisor/    (Next.js App Router — Puerto 4002)
+│   ├── portal/        (Next.js App Router — https://gob-platform-portal.vercel.app/)
+│   ├── backoffice/    (Next.js App Router — https://gob-platform-backoffice.vercel.app/)
+│   └── supervisor/    (Next.js App Router — https://gob-platform-supervisor.vercel.app/)
 ├── packages/
 │   ├── config/        (Tailwind, TypeScript, ESLint rules)
 │   ├── types/         (Domain Enums, Session Interfaces)
@@ -157,20 +157,33 @@ export const config = {
 
 ---
 
-## 🌩️ 4. Escalabilidad DNS en Supabase
-Configurar bases de datos a Edge Functions suele tirar errores de DNS (`getaddrinfo ENOTFOUND`) debido a que Supabase fuerza conexiones directas (`db.*.supabase.co`) a IPv6 si se conectan sin pgbouncer ni HTTP.
+## 🌩️ 4. Deploy en Producción (Vercel)
 
-La arquitectura de Vercel requiere resolver el proxy mediante IPv4, por ende se usa **Connection Pooling (Transaction Mode)** modificando las string queries.
+Toda la plataforma dejó de operarse estrictamente en `localhost` y está vinculada CI/CD de **Vercel** directamente con el repositorio de GitHub. 
 
-```bash
-# Formato que rompe en Next Vercel Runtime:
-DATABASE_URL=postgresql://postgres:[PASS]@db.xlxjichvzgbcciacsoam.supabase.co:5432/postgres
+### Variables de Entorno (Vercel Configuration)
+Para que el entorno remoto funcione idéntico o mejor que el localhost, se definieron estas variables productivas de NextAuth y DB en Vercel:
 
-# Formato de Connection Pooling que resuelve IPv4 y evita saturación de Threads:
-DATABASE_URL=postgresql://postgres.xlxjichvzgbcciacsoam:[PASS]@aws-0-us-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true
+```env
+# URL productiva (evita errores de redirect en callbacks)
+AUTH_URL="https://gob-platform-backoffice.vercel.app"
+
+# Secreto para firmar las cookies JWE de sesión en Edge
+AUTH_SECRET="GobPlatform_NextAuthSecret_2024"
+
+# Connection Pooling explícito para sortear el error "ENOTFOUND" que da IPv6
+DATABASE_URL="postgresql://postgres.xlxjichvzgbcciacsoam:[PASS]@aws-0-us-west-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
 ```
 
-## Estado Actual 🚀
-* **Monorepo:** Vercel integrado y compilando correctamente cacheando carpetas.
-* **Autenticación:** Completa (Rutas de login y protección nativa).
-* **Database:** Conexiones edge exitosas a Supabase con Drizzle ORM sincronizado.
+### Escalabilidad DNS en Supabase (El problema de IPv6)
+Configurar bases de datos conectadas a Edge Functions en Vercel suele tirar errores de DNS debido a que Supabase fuerza conexiones directas (`db.*.supabase.co`) a **IPv6**. La red de Edge de Vercel requiere resolver el proxy mediante **IPv4**.
+
+La solución arquitectónica implementada fue rutear el tráfico a través del **Connection Pooler de Supabase (puerto 6543) anexando `?pgbouncer=true`**, garantizando conectividad en milisegundos sin atascar hilos de conexión.
+
+---
+
+## 🚀 Estado Actual en Producción
+* **Repositorio:** Sincronizado (`main`).
+* **Vercel Backoffice:** Compilando limpio con Turborepo remote caching.
+* **Autenticación (Edge):** Operacional (`https://gob-platform-backoffice.vercel.app/login`), emite y valida JWTs sin Node.js runtime crashes.
+* **Database (Supabase):** Recibiendo consultas Drizzle desde los Edge endpoints a través del Pooler IPv4.
