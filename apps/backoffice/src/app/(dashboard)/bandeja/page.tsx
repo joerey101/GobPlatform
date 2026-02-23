@@ -1,76 +1,64 @@
 import Link from 'next/link'
+import { db } from '@repo/db'
+import {
+    request,
+    citizen,
+    serviceCatalog,
+    slaPolicy,
+    internalUser,
+} from '@repo/db'
+import { eq, asc, desc } from 'drizzle-orm'
 import { SLABadge } from '@/components/ui/SLABadge'
 import { PriorityIndicator } from '@/components/ui/PriorityIndicator'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 
-// Mock data — se reemplazará con queries Drizzle cuando los datos estén listos
-const requests = [
-    {
-        id: 'REQ-001',
-        subject: 'Solicitud de permiso comercial - Zona Norte',
-        priority: 'p1' as const,
-        sla: 'overdue' as const,
-        status: 'in_progress' as const,
-        date: 'Hace 2h',
-        selected: false,
-    },
-    {
-        id: 'REQ-002',
-        subject: 'Renovación de licencia de conducir',
-        priority: 'p2' as const,
-        sla: 'at_risk' as const,
-        status: 'open' as const,
-        date: 'Hace 5h',
-        selected: true,
-    },
-    {
-        id: 'REQ-003',
-        subject: 'Consulta sobre impuesto predial',
-        priority: 'p3' as const,
-        sla: 'on_time' as const,
-        status: 'closed' as const,
-        date: 'Ayer',
-        selected: false,
-    },
-    {
-        id: 'REQ-004',
-        subject: 'Denuncia anónima - Ruidos molestos',
-        priority: 'p1' as const,
-        sla: 'at_risk' as const,
-        status: 'on_hold' as const,
-        date: 'Ayer',
-        selected: false,
-    },
-    {
-        id: 'REQ-005',
-        subject: 'Actualización de domicilio',
-        priority: 'p4' as const,
-        sla: 'on_time' as const,
-        status: 'open' as const,
-        date: '2 días',
-        selected: false,
-    },
-    {
-        id: 'REQ-2023-8942',
-        subject: 'Renovación de Licencia Comercial',
-        priority: 'p1' as const,
-        sla: 'overdue' as const,
-        status: 'in_progress' as const,
-        date: 'Hace 2 horas',
-        selected: false,
-    },
-    {
-        id: 'REQ-2023-8941',
-        subject: 'Subsidio Habitacional Tipo A',
-        priority: 'p2' as const,
-        sla: 'at_risk' as const,
-        status: 'open' as const,
-        date: 'Ayer',
-        selected: false,
-    },
-]
+// ─── SLA runtime helper ─────────────────────────────────────────────────────
+type SlaStatus = 'on_time' | 'at_risk' | 'overdue'
 
-export default function BandejaPage() {
+function computeSlaStatus(dueAt: Date | null, resolutionHours: number): SlaStatus {
+    if (!dueAt) return 'on_time'
+    const now = Date.now()
+    const due = dueAt.getTime()
+    const warningBuffer = resolutionHours * 0.2 * 60 * 60 * 1000
+    if (now >= due) return 'overdue'
+    if (now >= due - warningBuffer) return 'at_risk'
+    return 'on_time'
+}
+
+function formatRelativeTime(date: Date): string {
+    const diffMs = Date.now() - date.getTime()
+    const diffH = Math.floor(diffMs / 3_600_000)
+    const diffD = Math.floor(diffH / 24)
+    if (diffH < 1) return 'Hace momentos'
+    if (diffH < 24) return `Hace ${diffH}h`
+    if (diffD === 1) return 'Ayer'
+    return `Hace ${diffD} días`
+}
+
+function priorityLabel(p: string): string {
+    const map: Record<string, string> = { '1': 'p1', '2': 'p2', '3': 'p3', '4': 'p4', '5': 'p5' }
+    return map[p] ?? 'p3'
+}
+
+// ─── Page ───────────────────────────────────────────────────────────────────
+export default async function BandejaPage() {
+    // Query with JOINs
+    let rows: Awaited<ReturnType<typeof fetchRequests>> = []
+    let error: string | null = null
+
+    try {
+        rows = await fetchRequests()
+    } catch (e) {
+        error = (e as Error).message
+    }
+
+    const requests = rows.map(r => ({
+        ...r,
+        slaStatus: computeSlaStatus(r.dueAt, r.resolutionHours ?? 72) as SlaStatus,
+        relativeDate: formatRelativeTime(r.createdAt),
+        priorityKey: priorityLabel(r.priority),
+    }))
+
     return (
         <div className="flex flex-1 overflow-hidden h-full">
             {/* Main work area */}
@@ -104,194 +92,129 @@ export default function BandejaPage() {
                     </div>
                 </header>
 
+                {/* Error state */}
+                {error && (
+                    <div className="m-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                        <span className="material-symbols-outlined text-red-500">error</span>
+                        <div>
+                            <p className="text-sm font-semibold text-red-700">Error de conexión a la base de datos</p>
+                            <p className="text-xs text-red-600 mt-0.5">{error}</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Empty state */}
+                {!error && requests.length === 0 && (
+                    <div className="flex-1 flex items-center justify-center flex-col gap-4 text-slate-400">
+                        <span className="material-symbols-outlined text-6xl">inbox</span>
+                        <p className="text-lg font-medium">Bandeja vacía</p>
+                        <p className="text-sm">No hay solicitudes asignadas a tu área.</p>
+                    </div>
+                )}
+
                 {/* Table */}
-                <div className="flex-1 overflow-y-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 sticky top-0 z-10 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                            <tr>
-                                <th className="px-6 py-3 w-12">
-                                    <input className="rounded border-slate-300" type="checkbox" />
-                                </th>
-                                <th className="px-6 py-3">ID / Asunto</th>
-                                <th className="px-6 py-3">Prioridad</th>
-                                <th className="px-6 py-3">SLA</th>
-                                <th className="px-6 py-3">Estado</th>
-                                <th className="px-6 py-3 text-right">Fecha</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-sm">
-                            {requests.map((req) => (
-                                <tr
-                                    key={req.id}
-                                    className={`cursor-pointer transition-colors group
-                                        ${req.selected
-                                            ? 'bg-blue-50/60 border-l-4 border-l-primary relative'
-                                            : 'hover:bg-slate-50'
-                                        }`}
-                                >
-                                    <td className="px-6 py-4">
-                                        <input
-                                            className="rounded border-slate-300"
-                                            type="checkbox"
-                                            defaultChecked={req.selected}
-                                        />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-semibold text-slate-900">{req.id}</span>
-                                            <span className="text-slate-500 text-xs truncate max-w-[220px]">{req.subject}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <PriorityIndicator priority={req.priority} />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <SLABadge status={req.sla} />
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <StatusBadge status={req.status} />
-                                    </td>
-                                    <td className="px-6 py-4 text-right text-slate-500">{req.date}</td>
+                {requests.length > 0 && (
+                    <div className="flex-1 overflow-y-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead className="bg-slate-50 sticky top-0 z-10 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th className="px-6 py-3 w-12">
+                                        <input className="rounded border-slate-300" type="checkbox" />
+                                    </th>
+                                    <th className="px-6 py-3">Solicitud</th>
+                                    <th className="px-6 py-3">Prioridad</th>
+                                    <th className="px-6 py-3">SLA</th>
+                                    <th className="px-6 py-3">Estado</th>
+                                    <th className="px-6 py-3">Servicio</th>
+                                    <th className="px-6 py-3 text-right">Fecha</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 text-sm">
+                                {requests.map((req) => (
+                                    <tr
+                                        key={req.id}
+                                        className="cursor-pointer transition-colors hover:bg-slate-50"
+                                    >
+                                        <td className="px-6 py-4">
+                                            <input className="rounded border-slate-300" type="checkbox" />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-semibold text-slate-900 truncate max-w-[200px]" title={req.subject}>
+                                                    {req.subject}
+                                                </span>
+                                                <span className="text-xs text-slate-400 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-sm">person</span>
+                                                    {req.citizenFullName}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <PriorityIndicator priority={req.priorityKey as any} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <SLABadge status={req.slaStatus} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <StatusBadge status={req.status as any} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs text-slate-600 font-medium bg-slate-100 px-2 py-1 rounded">
+                                                {req.serviceName}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right text-xs text-slate-500">
+                                            {req.relativeDate}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </main>
 
-            {/* Right panel — Citizen 360° */}
-            <aside className="w-[380px] bg-slate-50 border-l border-slate-200 flex flex-col shrink-0">
-                {/* Tabs */}
-                <div className="bg-white border-b border-slate-200 px-2 pt-2">
-                    <div className="flex items-center gap-1 overflow-x-auto">
-                        {['Ciudadano', 'Caso', 'IA', 'Docs', 'Notif'].map((tab, i) => (
-                            <button
-                                key={tab}
-                                className={`px-4 py-2.5 text-sm rounded-t-lg transition-colors
-                                    ${i === 0
-                                        ? 'font-semibold border-b-2 border-primary bg-blue-50/50'
-                                        : 'font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                                    }`}
-                                style={i === 0 ? { color: '#2c6bc3', borderColor: '#2c6bc3' } : {}}
-                            >
-                                {tab}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6">
-                    {/* Citizen avatar + info */}
-                    <div className="flex flex-col items-center mb-8">
-                        <div className="relative mb-3">
-                            <div className="size-24 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-sm">
-                                <span className="material-symbols-outlined text-slate-400 text-5xl">person</span>
-                            </div>
-                            <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-sm border border-slate-100">
-                                <span className="material-symbols-outlined text-blue-500 text-xl" title="Verificado">
-                                    verified
-                                </span>
-                            </div>
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-900 text-center">María Fernanda González</h2>
-                        <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                            <span className="material-symbols-outlined text-base">badge</span>
-                            DNI: 24.593.102
-                        </p>
-                        <div className="flex gap-2 mt-4">
-                            {['mail', 'call', 'chat'].map(icon => (
-                                <button
-                                    key={icon}
-                                    className="flex items-center justify-center size-8 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-primary hover:text-primary transition-colors"
-                                    style={{ '--hover-color': '#2c6bc3' } as React.CSSProperties}
-                                >
-                                    <span className="material-symbols-outlined text-lg">{icon}</span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <hr className="border-slate-200 mb-6" />
-
-                    {/* Timeline */}
-                    <div className="mb-6">
-                        <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">
-                            Línea de Tiempo
-                        </h3>
-                        <div className="space-y-6 relative pl-2">
-                            <div className="absolute left-6 top-2 bottom-2 w-0.5 bg-slate-200" />
-
-                            {/* WA message */}
-                            <div className="relative flex gap-4">
-                                <div className="relative z-10 flex items-center justify-center size-12 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm mt-1">
-                                    <span className="text-[#25D366]">
-                                        <svg fill="currentColor" height="20" width="20" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z" />
-                                        </svg>
-                                    </span>
-                                </div>
-                                <div className="flex flex-col pt-1.5 w-full">
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-sm font-semibold text-slate-900">Mensaje entrante</span>
-                                        <span className="text-xs text-slate-400">10:42 AM</span>
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-1 bg-white p-2 rounded border border-slate-100">
-                                        &ldquo;Hola, quería consultar sobre el estado de mi trámite REQ-002, ¿necesitan más documentos?&rdquo;
-                                    </p>
-                                    <div className="mt-2 flex gap-2">
-                                        <button className="text-xs font-medium hover:underline" style={{ color: '#2c6bc3' }}>Responder</button>
-                                        <button className="text-xs font-medium text-slate-500 hover:text-slate-700">Archivar</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Email notification */}
-                            <div className="relative flex gap-4">
-                                <div className="relative z-10 flex items-center justify-center size-12 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm mt-1">
-                                    <span className="material-symbols-outlined text-slate-500 text-xl">mail</span>
-                                </div>
-                                <div className="flex flex-col pt-1.5 w-full">
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-sm font-semibold text-slate-900">Notificación automática</span>
-                                        <span className="text-xs text-slate-400">Ayer</span>
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Cambio de estado: De &quot;Pendiente&quot; a &quot;Abierto&quot;. Se ha asignado un agente al caso.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Portal creation */}
-                            <div className="relative flex gap-4">
-                                <div className="relative z-10 flex items-center justify-center size-12 shrink-0 rounded-full bg-white border border-slate-200 shadow-sm mt-1">
-                                    <span className="material-symbols-outlined text-xl" style={{ color: '#2c6bc3' }}>language</span>
-                                </div>
-                                <div className="flex flex-col pt-1.5 w-full">
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-sm font-semibold text-slate-900">Solicitud creada</span>
-                                        <span className="text-xs text-slate-400">Hace 2 días</span>
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Usuario inició el trámite a través del Portal Web GobPlatform.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Action footer */}
-                <div className="p-4 border-t border-slate-200 bg-white">
-                    <button
-                        className="w-full py-2.5 px-4 text-white rounded-lg font-medium shadow-sm transition-colors flex items-center justify-center gap-2"
-                        style={{ backgroundColor: '#2c6bc3' }}
-                    >
-                        <span className="material-symbols-outlined text-lg">add_circle</span>
-                        Nueva Acción
-                    </button>
-                </div>
+            {/* Right panel — placeholder for selected request detail */}
+            <aside className="w-[340px] bg-slate-50 border-l border-slate-200 flex flex-col items-center justify-center shrink-0 text-slate-400 gap-3">
+                <span className="material-symbols-outlined text-5xl">touch_app</span>
+                <p className="text-sm font-medium">Seleccioná una solicitud</p>
+                <p className="text-xs">Para ver el perfil del ciudadano</p>
             </aside>
         </div>
     )
+}
+
+// ─── Drizzle query ───────────────────────────────────────────────────────────
+async function fetchRequests() {
+    const rows = await db
+        .select({
+            id: request.id,
+            subject: request.subject,
+            status: request.status,
+            priority: request.priority,
+            channel: request.channel,
+            dueAt: request.dueAt,
+            createdAt: request.createdAt,
+            citizenFullName: citizen.fullName,
+            citizenId: citizen.id,
+            serviceName: serviceCatalog.name,
+            serviceCode: serviceCatalog.code,
+            resolutionHours: slaPolicy.resolutionHours,
+            assignedUserFullName: internalUser.fullName,
+        })
+        .from(request)
+        .innerJoin(citizen, eq(request.citizenId, citizen.id))
+        .innerJoin(serviceCatalog, eq(request.serviceId, serviceCatalog.id))
+        .leftJoin(slaPolicy, eq(slaPolicy.serviceId, request.serviceId))
+        .leftJoin(internalUser, eq(request.assignedUserId, internalUser.id))
+        .orderBy(asc(request.dueAt), desc(request.createdAt))
+        .limit(50)
+
+    // De-dup per request (multiple sla_policy rows per service)
+    const seen = new Set<string>()
+    return rows.filter(r => {
+        if (seen.has(r.id)) return false
+        seen.add(r.id)
+        return true
+    })
 }
