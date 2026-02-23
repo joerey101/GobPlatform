@@ -19,6 +19,8 @@
                 "DATABASE_URL",
                 "NEXTAUTH_URL",
                 "NEXTAUTH_SECRET",
+                "AUTH_URL",
+                "AUTH_SECRET",
                 "SUPABASE_URL",
                 "SUPABASE_ANON_KEY",
                 "SUPABASE_SERVICE_ROLE_KEY",
