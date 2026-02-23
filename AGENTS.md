@@ -2,7 +2,7 @@
 
 > Este archivo es leído automáticamente por Antigravity antes de ejecutar cualquier tarea.
 > Refleja el estado REAL del proyecto en producción.
-> Última actualización: Fase 1 completa — las 3 apps en producción en Vercel.
+> Última actualización: **v0.3** — Fase 2 (UI Shell Backoffice) + Fase 3a (Bandeja conectada a Supabase) completas.
 
 ---
 
@@ -33,7 +33,7 @@ quién es la persona, qué hizo, qué tiene pendiente, qué recibió, qué se le
 |------|-----------|--------|
 | Framework | Next.js 15 (App Router) + TypeScript strict | ✅ Operativo |
 | Monorepo | Turborepo (npm workspaces) | ✅ Operativo |
-| Estilos | Tailwind CSS | ✅ Configurado |
+| Estilos | Tailwind CSS v4 + postcss.config.mjs | ✅ Operativo |
 | ORM | Drizzle ORM → PostgreSQL (Supabase) | ✅ Sincronizado |
 | Validación | Zod en todos los inputs y API routes | ✅ Configurado |
 | Auth Backoffice | NextAuth.js v5 — Credentials + JWT + Edge middleware | ✅ En producción |
@@ -242,23 +242,30 @@ Preferir `db.query.*` para queries con relaciones.
    [x] Vercel: 3 proyectos deployados con CI/CD desde GitHub
    [x] Auth backoffice: Credentials + bcrypt + JWT + Edge middleware en producción
 
-🚀 FASE 2 — Portal del Ciudadano (PRÓXIMA)
-   [ ] Auth portal: Email + OTP — mismo patrón Edge/Node split, AUTH_URL="https://gob-platform-portal.vercel.app"
-   [ ] Mi Perfil: datos personales, contactos, domicilio
-   [ ] Catálogo de trámites: búsqueda + ficha de servicio
-   [ ] Alta de solicitud: crea request + case/procedure + audit_event
-   [ ] Seguimiento: listado de mis trámites con estado y timeline
-   [ ] Documentos: upload a Supabase Storage + tabla document
-   [ ] Notificaciones: bandeja + marcar leída + acuse
+✅ FASE 2 — UI Shell Backoffice (COMPLETA — v0.3)
+   [x] Tailwind CSS v4 + postcss.config.mjs configurado
+   [x] Design tokens unificados (@theme: primary #2c6bc3, gob-blue #0A2540)
+   [x] 5 componentes atómicos: SLABadge, PriorityIndicator, StatusBadge, ChannelBadge, CitizenAvatar
+   [x] Sidebar toggleable 72px/256px con estado activo
+   [x] Login page: gradiente deep-blue, card blanca, Material Symbols
+   [x] Dashboard layout shell con auth guard
 
-🔲 FASE 3 — Consola Operativa (Backoffice)
-   [ ] Bandeja de trabajo con semáforo SLA
-   [ ] Vista 360° del ciudadano
-   [ ] Gestión de requests: derivar, crear work_items, cambiar estado
+✅ FASE 3a — Bandeja Operativa (COMPLETA — v0.3)
+   [x] /bandeja: async Server Component con Drizzle JOINs a Supabase
+   [x] SLA calculado en runtime desde dueAt (on_time/at_risk/overdue)
+   [x] Seed: 3 servicios, 13 SLA policies, 5 ciudadanos, 7 requests
+   [x] getRequests() query en packages/db/src/queries/bandeja.ts
 
-🔲 FASE 4 — Turnos, Territorio y Pagos
-🔲 FASE 5 — Programas Sociales, IA (Claude API) e Interoperabilidad
-🔲 FASE 6 — BI, Gobierno y Madurez
+🚀 FASE 3b — Gestión de Casos (PRÓXIMA)
+   [ ] /bandeja/[id] → perfil 360° ciudadano + timeline (tokens_3)
+   [ ] /casos/[id]   → flujo de trabajo del caso (tokens_4)
+   [ ] /casos/[id] tab IA → panel sugerencias Claude API (tokens_5)
+   [ ] Asignación y cambio de estado con audit_event
+
+🔲 FASE 4 — Portal del Ciudadano
+🔲 FASE 5 — Turnos, Territorio y Pagos
+🔲 FASE 6 — Programas Sociales, IA e Interoperabilidad
+🔲 FASE 7 — BI, Gobierno y Madurez
 ```
 
 ---
