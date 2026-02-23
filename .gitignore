@@ -1,0 +1,36 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+dist/
+
+# Build
+build/
+
+# Env files
+.env*.local
+.env.production
+.env
+
+# Turbo
+.turbo
+
+# Misc
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Drizzle
+drizzle/
