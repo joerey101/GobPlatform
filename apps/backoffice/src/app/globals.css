@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@source "../**/*.{js,ts,jsx,tsx,mdx}";
+
 @theme {
     --color-primary: #2c6bc3;
     --color-primary-dark: #1a4d8c;
@@ -26,5 +28,4 @@
 
 body {
     font-family: var(--font-display);
-    @apply bg-background-light text-slate-900 antialiased;
 }
