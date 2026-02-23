@@ -7,6 +7,7 @@ import type { JWT } from 'next-auth/jwt'
  * Used by middleware (Edge Runtime) and extended by auth.ts (Node.js).
  */
 export const authConfig = {
+    trustHost: true,
     pages: {
         signIn: '/login',
     },
