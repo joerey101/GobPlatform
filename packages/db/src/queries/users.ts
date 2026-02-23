@@ -35,7 +35,7 @@ export async function getUserByEmail(email: string) {
         passwordHash: first.passwordHash,
         orgUnitId: first.orgUnitId,
         isActive: first.isActive,
-        roles: rows.map((r) => r.roleName).filter((n): n is string => n !== null),
+        roles: rows.flatMap((r) => (r.roleName !== null ? [r.roleName] : [])),
     }
 }
 
