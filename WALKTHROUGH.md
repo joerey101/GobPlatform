@@ -119,6 +119,13 @@ No usar `npm run dev` desde la raíz sin turbo.
 - Server-side keys: La KEY se aloja en Route Handler y no llega al cliente.
 - Creación de `<AIPanel/>` Cliente mapeando ConfidenceBars, sugerencias editables de borrador de mail con switchers de tono y manejo del esqueleto dinámico de loading.
 
+**Ruta:** Deploy y Debug (Vercel & GitHub)
+**Resolución de Conflictos:**
+- **Validación Vercel Dashboard**: Verificación auditada sobre commits y variables de entorno (`ANTHROPIC_API_KEY`).
+- **Next.js 15 Dynamic Route Params**: Solucionado el TS Error `params as Promise<{id: string}>` en Page y API Route Handlers.
+- **Drizzle ORM Workspace Conflict**: Purificada la instanciación duplicada de la librería. Las utilerías SQL (`eq`, `desc`, `and`) pasaron a exportarse nativamente desde el package `@repo/db/src/index.ts` estabilizando la compilación `next build` en producción (Exit Code 0).
+- **Next.js Route Group Pathing**: Restauradas las URIs que devolvían 404. El agrupador `(dashboard)` fue purgado del `<Sidebar>` y el `<TableRow>` para alinear el push de URL con el árbol físico de rutas de la aplicación.
+
 ---
 
 ## v0.2 — Fase 2a — Auth + DB (sesión anterior)
