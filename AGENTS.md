@@ -4,6 +4,18 @@
 > Refleja el estado REAL del proyecto en producción.
 > Última actualización: **v0.3** — Fase 2 (UI Shell Backoffice) + Fase 3a (Bandeja conectada a Supabase) completas.
 
+## Phase Status
+
+```
+✅ Fase 3a completa (commit 5ddf76f):
+- Bandeja conectada a Supabase via Drizzle
+- 5 componentes UI en producción
+- Seed con 7 requests, 5 ciudadanos, 13 SLA policies
+- SLA calculado en runtime
+
+🚀 Próximo: Fase 3b — /bandeja/[id] perfil 360° ciudadano (tokens_3)
+```
+
 ---
 
 ## Qué es este proyecto
