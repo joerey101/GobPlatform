@@ -67,6 +67,8 @@ export const auditActionEnum = pgEnum('audit_action', [
     'view',
     'download',
     'assign',
+    'accept',
+    'reject',
 ])
 export const notificationStatusEnum = pgEnum('notification_status', [
     'pending',
@@ -81,6 +83,10 @@ export const workItemStatusEnum = pgEnum('work_item_status', [
     'done',
     'cancelled',
 ])
+
+export const aiRunStatusEnum = pgEnum('ai_run_status', ['succeeded', 'failed'])
+export const aiSuggestionTypeEnum = pgEnum('ai_suggestion_type', ['classification', 'priority', 'draft_reply'])
+export const aiSuggestionStatusEnum = pgEnum('ai_suggestion_status', ['proposed', 'accepted', 'rejected', 'edited'])
 
 // ═══════════════════════════════════════════════════════════════════════════
 // IDENTIDAD Y PERFIL ÚNICO DEL CIUDADANO (7 tablas)
@@ -528,6 +534,52 @@ export const auditEvent = pgTable(
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
+// INTELIGENCIA ARTIFICIAL (3 tablas)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * ai_model — Catálogo de modelos LLM utilizados
+ */
+export const aiModel = pgTable('ai_model', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    provider: text('provider').notNull(), // 'anthropic', 'openai', etc.
+    name: text('name').notNull(), // 'claude-sonnet-4'
+    version: text('version').notNull(), // '20250514'
+    isActive: boolean('is_active').notNull().default(true),
+    ...timestamps,
+}, (t) => [unique().on(t.provider, t.name, t.version)])
+
+/**
+ * ai_run — Registro de ejecución y trazabilidad del LLM
+ */
+export const aiRun = pgTable('ai_run', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    purpose: text('purpose').notNull().default('classify+suggest'),
+    requestId: uuid('request_id').references(() => request.id, { onDelete: 'cascade' }),
+    citizenId: uuid('citizen_id').references(() => citizen.id),
+    serviceId: uuid('service_id').references(() => serviceCatalog.id),
+    modelId: uuid('model_id').notNull().references(() => aiModel.id),
+    status: aiRunStatusEnum('status').notNull().default('succeeded'),
+    inputHash: text('input_hash'), // Hash del prompt
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+    ...timestamps,
+})
+
+/**
+ * ai_suggestion — Sugerencias atómicas generadas en un run
+ */
+export const aiSuggestion = pgTable('ai_suggestion', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    runId: uuid('run_id').notNull().references(() => aiRun.id, { onDelete: 'cascade' }),
+    suggestionType: aiSuggestionTypeEnum('suggestion_type').notNull(),
+    payloadJson: text('payload_json').notNull(), // La sugerencia en sí (JSON stringificado)
+    confidence: doublePrecision('confidence'), // 0.0 - 1.0
+    status: aiSuggestionStatusEnum('status').notNull().default('proposed'),
+    ...timestamps,
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
 // RELATIONS (Drizzle relational queries)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -572,4 +624,15 @@ export const requestRelations = relations(request, ({ one, many }) => ({
     documents: many(requestDocument),
     notifications: many(notification),
     assignmentHistory: many(assignmentHistory),
+    aiRuns: many(aiRun),
+}))
+
+export const aiRunRelations = relations(aiRun, ({ one, many }) => ({
+    request: one(request, { fields: [aiRun.requestId], references: [request.id] }),
+    model: one(aiModel, { fields: [aiRun.modelId], references: [aiModel.id] }),
+    suggestions: many(aiSuggestion),
+}))
+
+export const aiSuggestionRelations = relations(aiSuggestion, ({ one }) => ({
+    run: one(aiRun, { fields: [aiSuggestion.runId], references: [aiRun.id] }),
 }))

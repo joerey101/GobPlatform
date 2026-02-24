@@ -9,7 +9,7 @@ import { PriorityIndicator } from '@/components/ui/PriorityIndicator'
 import { SLABadge } from '@/components/ui/SLABadge'
 
 import { WorkflowStepper } from './components/WorkflowStepper'
-import { CaseActionsPanel } from './components/CaseActionsPanel'
+import { RightPanelWrapper } from './components/RightPanelWrapper'
 
 function computeSlaStatus(dueAt: Date | null, resolutionHours: number) {
     if (!dueAt) return 'on_time'
@@ -172,58 +172,15 @@ export default async function CaseDetailPage({ params }: { params: { id: string 
                 </div>
             </main>
 
-            {/* Right Column — Panel de Acciones */}
-            <aside className="w-[360px] bg-slate-50 border-l border-slate-200 flex flex-col overflow-y-auto shrink-0 z-10 p-6">
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined">bolt</span>
-                        Acciones Previstas
-                    </h2>
-                </div>
-
-                <CaseActionsPanel
-                    requestId={detail.id}
-                    currentStatus={detail.status!}
+            {/* Right Column — Tab System para Panel de Acciones y AI */}
+            <aside className="w-[360px] bg-slate-50 border-l border-slate-200 flex flex-col overflow-y-hidden shrink-0 z-10">
+                <RightPanelWrapper
+                    detailId={detail.id}
+                    status={detail.status!}
                     orgUnits={orgUnits}
                     users={users}
+                    documents={detail.documents}
                 />
-
-                <div className="mt-6 border-t border-slate-200 pt-6">
-                    <h3 className="text-sm font-bold text-slate-800 mb-3 uppercase tracking-wider flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[18px] text-slate-400">folder_open</span>
-                        Documentos ({detail.documents.length})
-                    </h3>
-                    <div className="flex flex-col gap-2">
-                        {detail.documents.length > 0 ? (
-                            detail.documents.map((doc, idx) => (
-                                <div key={idx} className="flex items-center justify-between bg-white border border-slate-200 p-2.5 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-3 overflow-hidden">
-                                        <span className="material-symbols-outlined text-[#2c6bc3] bg-blue-50 p-1 rounded">description</span>
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-bold text-slate-700 truncate">{doc.fileName}</p>
-                                            <p className="text-[10px] text-slate-400 uppercase">{doc.role || 'archivo'} • {(doc.sizeBytes! / 1024).toFixed(1)} KB</p>
-                                        </div>
-                                    </div>
-                                    <button className="text-slate-400 hover:text-[#2c6bc3] p-1.5 rounded-md hover:bg-slate-50 transition-colors" title="Descargar">
-                                        <span className="material-symbols-outlined text-[18px]">download</span>
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="text-sm text-slate-400 italic">No hay documentos adjuntos.</p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mt-auto pt-8 pb-2">
-                    <Link
-                        href={`/dashboard/bandeja/${detail.id}`}
-                        className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-slate-900 py-2 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-300 hover:bg-white text-sm"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">person</span>
-                        Ver perfil del ciudadano
-                    </Link>
-                </div>
             </aside>
         </div>
     )
