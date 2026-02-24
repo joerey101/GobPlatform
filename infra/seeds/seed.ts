@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
 import * as schema from '../../packages/db/src/schema/index'
+import { generateCUIL } from '../../packages/db/src/utils/cuil'
 
 const {
     role,
@@ -151,6 +152,11 @@ async function main() {
         { fullName: 'Roberto Alejandro Díaz', birthDate: new Date('1968-01-30') },
         { fullName: 'Claudia Patricia Vega', birthDate: new Date('1995-06-18') },
     ]
+    // Extendemos la base a 20 ciudadanos para matchear lo que tenés en DB
+    for (let i = 6; i <= 20; i++) {
+        citizensData.push({ fullName: `Ciudadano de Prueba ${i}`, birthDate: new Date(`1980-01-${i.toString().padStart(2, '0')}`) })
+    }
+
     const citizensContacts = [
         { email: 'mfgonzalez@gmail.com', phone: '+54 11 4523-7891', street: 'Av. Corrientes', nro: '1234', city: 'CABA', province: 'Capital Federal' },
         { email: 'jcrodriguez@gmail.com', phone: '+54 11 5634-2198', street: 'Rivadavia', nro: '890', city: 'Buenos Aires', province: 'Buenos Aires' },
@@ -158,17 +164,44 @@ async function main() {
         { email: 'radiaz@gmail.com', phone: '+54 341 4756-3421', street: 'Mitre', nro: '456', city: 'Rosario', province: 'Santa Fe' },
         { email: 'cpvega@yahoo.com', phone: '+54 261 4923-7654', street: 'Belgrano', nro: '234', city: 'Mendoza', province: 'Mendoza' },
     ]
+    for (let i = 6; i <= 20; i++) {
+        citizensContacts.push({ email: `test${i}@gmail.com`, phone: `+54 11 1234-56${i.toString().padStart(2, '0')}`, street: 'Calle Falsa', nro: '123', city: 'CABA', province: 'Capital Federal' })
+    }
 
     const insertedCitizens = []
-    const dnis = ['24593102', '18456789', '33211789', '12867345', '40125678']
-    for (let i = 0; i < citizensData.length; i++) {
-        const [c] = await db.insert(citizen).values(citizensData[i]!).onConflictDoNothing().returning()
-        if (c) {
-            await db.insert(citizenIdentifier).values({
-                citizenId: c.id, type: 'dni', number: dnis[i]!, isVerified: true, verifiedAt: new Date()
-            }).onConflictDoNothing()
+    // DNI para los primeros 16 ciudadanos (1 a 16)
+    // Los últimos 4 (17, 18, 19, 20) NO tendrán DNI intencionalmente
+    const generateDni = (index: number) => {
+        const dnisBase = ['24593102', '18456789', '33211789', '12867345', '40125678']
+        if (index < 5) return dnisBase[index]!
+        return `300000${index.toString().padStart(2, '0')}`
+    }
 
-            // 7.1 Contactos
+    for (let i = 0; i < citizensData.length; i++) {
+        // Find existing or insert
+        let c = await db.query.citizen.findFirst({ where: eq(citizen.fullName, citizensData[i]!.fullName) })
+        if (!c) {
+            const [newC] = await db.insert(citizen).values(citizensData[i]!).returning()
+            c = newC
+        }
+
+        if (c) {
+            // Asignar DNI SOLO si es uno de los primeros 16 (índices 0 a 15)
+            // Los índices 16 a 19 (últimos 4 ciudadanos) se saltean la inserción de DNI
+            if (i < 16) {
+                const dni = generateDni(i)
+                await db.insert(citizenIdentifier).values({
+                    citizenId: c.id, type: 'dni', number: dni, isVerified: true, verifiedAt: new Date()
+                }).onConflictDoNothing()
+
+                const gender = Math.random() > 0.5 ? 'M' : 'F'
+                const cuil = generateCUIL(dni, gender)
+                await db.insert(citizenIdentifier).values({
+                    citizenId: c.id, type: 'cuil', number: cuil, isVerified: true, verifiedAt: new Date()
+                }).onConflictDoNothing()
+            }
+
+            // 7.1 Contactos (a todos)
             const contactData = citizensContacts[i]!
             await db.insert(citizenContact).values([
                 { citizenId: c.id, type: 'email' as const, value: contactData.email, isPrimary: true, isVerified: true },
@@ -176,7 +209,7 @@ async function main() {
                 { citizenId: c.id, type: 'whatsapp' as const, value: contactData.phone, isPrimary: false, isVerified: false },
             ]).onConflictDoNothing()
 
-            // 7.2 Domicilios
+            // 7.2 Domicilios (a todos)
             const [addr] = await db.insert(address).values({
                 street: contactData.street,
                 houseNumber: contactData.nro,
@@ -193,43 +226,6 @@ async function main() {
             }
 
             insertedCitizens.push(c)
-        }
-    }
-    // Fallback si ya existían (para correr el seed múltiples veces)
-    if (insertedCitizens.length === 0) {
-        const existing = await db.query.citizen.findMany({ orderBy: (citizen, { asc }) => [asc(citizen.createdAt)], limit: 5 })
-        insertedCitizens.push(...existing)
-
-        // Agregar info a los existentes, por idempotencia
-        for (let i = 0; i < insertedCitizens.length; i++) {
-            const c = insertedCitizens[i]!
-
-            // Fix DNI explicitly for idempotency fallback
-            await db.insert(citizenIdentifier).values({
-                citizenId: c.id, type: 'dni', number: dnis[i]!, isVerified: true, verifiedAt: new Date()
-            }).onConflictDoNothing()
-
-            const contactData = citizensContacts[i]!
-            await db.insert(citizenContact).values([
-                { citizenId: c.id, type: 'email' as const, value: contactData.email, isPrimary: true, isVerified: true },
-                { citizenId: c.id, type: 'phone' as const, value: contactData.phone, isPrimary: false, isVerified: true },
-                { citizenId: c.id, type: 'whatsapp' as const, value: contactData.phone, isPrimary: false, isVerified: false },
-            ]).onConflictDoNothing()
-
-            const [addr] = await db.insert(address).values({
-                street: contactData.street,
-                houseNumber: contactData.nro,
-                city: contactData.city,
-                province: contactData.province,
-            }).onConflictDoNothing().returning()
-
-            if (addr) {
-                await db.insert(citizenAddress).values({
-                    citizenId: c.id,
-                    addressId: addr.id,
-                    isPrimary: true,
-                }).onConflictDoNothing()
-            }
         }
     }
     const [c1, c2, c3, c4, c5] = insertedCitizens

@@ -119,6 +119,12 @@ No usar `npm run dev` desde la raíz sin turbo.
 - Server-side keys: La KEY se aloja en Route Handler y no llega al cliente.
 - Creación de `<AIPanel/>` Cliente mapeando ConfidenceBars, sugerencias editables de borrador de mail con switchers de tono y manejo del esqueleto dinámico de loading.
 
+**Ruta:** Funcionalidades Core Backend (Identity)
+**Acciones Completadas:**
+- Implementación de algoritmos de validación módulo 11 de AFIP para CUIT/CUIL (`utils/cuil.ts`).
+- Generación automática de CUILs válidos correlativos al DNI y género en el Seeding Script (`seed.ts`).
+- Verificación exhaustiva de inserción en base de datos logrando 20 identidades plenas y correlativas.
+
 **Ruta:** Deploy y Debug (Vercel & GitHub)
 **Resolución de Conflictos:**
 - **Validación Vercel Dashboard**: Verificación auditada sobre commits y variables de entorno (`ANTHROPIC_API_KEY`).

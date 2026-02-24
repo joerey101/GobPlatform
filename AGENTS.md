@@ -7,11 +7,12 @@
 ## Phase Status
 
 ```
-✅ Fase 3a completa (commit 5ddf76f):
+✅ Fase 3b completa:
 - Bandeja conectada a Supabase via Drizzle
 - 5 componentes UI en producción
-- Seed con 7 requests, 5 ciudadanos, 13 SLA policies
+- Seed con 7 requests, 20 ciudadanos (con DNI y CUIL verificados por AFIP), 13 SLA policies
 - SLA calculado en runtime
+- Integración completa de validación de CUIL/CUIT en perfil 360° ciudadano
 
 🚀 Próximo: Fase 3b — /bandeja/[id] perfil 360° ciudadano (tokens_3)
 ```
@@ -275,13 +276,14 @@ Preferir `db.query.*` para queries con relaciones.
    [x] Seed: 3 servicios, 13 SLA policies, 5 ciudadanos, 7 requests
    [x] getRequests() query en packages/db/src/queries/bandeja.ts
 
-🚀 FASE 3b — Gestión de Casos (EN PROGRESO)
+✅ FASE 3b — Gestión de Casos (COMPLETA)
    [x] /bandeja/[id] → perfil 360° ciudadano + timeline (tokens_3)
    [x] /casos/[id]   → flujo de trabajo del caso (tokens_4)
    [x] /casos/[id] tab IA → panel sugerencias Claude API (tokens_5)
    [x] Asignación y cambio de estado con audit_event
+   [x] Integración de validación de identidad (DNI + CUIL verificado)
 
-🔲 FASE 4 — Portal del Ciudadano
+🚀 FASE 4 — Portal del Ciudadano (EN PROGRESO)
 🔲 FASE 5 — Turnos, Territorio y Pagos
 🔲 FASE 6 — Programas Sociales, IA e Interoperabilidad
 🔲 FASE 7 — BI, Gobierno y Madurez
