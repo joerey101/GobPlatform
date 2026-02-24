@@ -62,24 +62,28 @@ export function RequestTabs({ detail }: RequestTabsProps) {
                         <div className="flex flex-col items-center text-center p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
                             <CitizenAvatar
                                 size="xl"
-                                fullName={detail.citizen.fullName}
-                                dni={detail.citizen.dni}
+                                fullName={detail.citizenFullName}
+                                dni={detail.citizenDni}
                             />
                             <h2 className="mt-4 text-xl font-bold text-slate-800 tracking-tight">
-                                {detail.citizen.fullName}
+                                {detail.citizenFullName}
                             </h2>
                             <p className="text-sm font-medium text-slate-400 font-mono mt-1">
-                                DNI {detail.citizen.dni}
+                                DNI {detail.citizenDni}
                             </p>
 
                             <div className="mt-6 flex justify-center gap-3 w-full">
                                 <button className="flex-1 flex flex-col items-center justify-center py-2 px-3 border border-slate-200 rounded-lg hover:border-[#2c6bc3] hover:bg-blue-50 transition-colors group">
                                     <span className="material-symbols-outlined text-slate-400 group-hover:text-[#2c6bc3] mb-1">call</span>
-                                    <span className="text-xs font-semibold text-slate-600">{detail.citizen.phone}</span>
+                                    <span className="text-xs font-semibold text-slate-600">
+                                        {detail.contacts?.find((c: any) => c.type === 'phone')?.value || 'No registrado'}
+                                    </span>
                                 </button>
                                 <button className="flex-1 flex flex-col items-center justify-center py-2 px-3 border border-slate-200 rounded-lg hover:border-[#2c6bc3] hover:bg-blue-50 transition-colors group">
                                     <span className="material-symbols-outlined text-slate-400 group-hover:text-[#2c6bc3] mb-1">mail</span>
-                                    <span className="text-xs font-semibold text-slate-600 truncate max-w-[120px]">{detail.citizen.email}</span>
+                                    <span className="text-xs font-semibold text-slate-600 truncate max-w-[120px]" title={detail.contacts?.find((c: any) => c.type === 'email')?.value}>
+                                        {detail.contacts?.find((c: any) => c.type === 'email')?.value || 'No registrado'}
+                                    </span>
                                 </button>
                             </div>
                         </div>
@@ -90,8 +94,10 @@ export function RequestTabs({ detail }: RequestTabsProps) {
                                 Domicilio Registrado
                             </h3>
                             <div className="text-sm text-slate-600 pl-[26px]">
-                                <p className="font-semibold text-slate-800">{detail.citizen.addressStreet}</p>
-                                <p>{detail.citizen.addressCity}, {detail.citizen.addressState}</p>
+                                <p className="font-semibold text-slate-800">
+                                    {detail.address ? `${detail.address.street} ${detail.address.houseNumber || ''}` : 'Sin calle'}
+                                </p>
+                                <p>{detail.address?.city || 'Sin ciudad'}, {detail.address?.province || ''}</p>
                             </div>
                         </div>
                     </div>
@@ -122,7 +128,7 @@ export function RequestTabs({ detail }: RequestTabsProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-3 bg-slate-50 rounded-lg">
                                     <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Servicio</p>
-                                    <p className="text-sm font-medium text-slate-700">{detail.service.name}</p>
+                                    <p className="text-sm font-medium text-slate-700">{detail.serviceName}</p>
                                 </div>
                                 <div className="p-3 bg-slate-50 rounded-lg">
                                     <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Asignado A</p>
