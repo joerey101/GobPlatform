@@ -203,6 +203,12 @@ async function main() {
         // Agregar info a los existentes, por idempotencia
         for (let i = 0; i < insertedCitizens.length; i++) {
             const c = insertedCitizens[i]!
+
+            // Fix DNI explicitly for idempotency fallback
+            await db.insert(citizenIdentifier).values({
+                citizenId: c.id, type: 'dni', number: dnis[i]!, isVerified: true, verifiedAt: new Date()
+            }).onConflictDoNothing()
+
             const contactData = citizensContacts[i]!
             await db.insert(citizenContact).values([
                 { citizenId: c.id, type: 'email' as const, value: contactData.email, isPrimary: true, isVerified: true },
@@ -235,6 +241,7 @@ async function main() {
     console.log('→ Seeding requests...')
     const requestsData = [
         {
+            id: 'ed267c7e-eb2e-4b6c-b3a6-ec18a096c46a',
             citizenId: c1.id, serviceId: svcReclamoId, type: 'case' as const,
             status: 'in_progress' as const, priority: '1' as const,
             subject: 'Ruidos molestos en edificio de la calle San Martín 450',
@@ -243,6 +250,7 @@ async function main() {
             createdAt: hoursAgo(10), dueAt: hoursFromNow(1),   // OVERDUE inminente
         },
         {
+            id: '85c94285-802c-490f-90ce-7dafe2dfd37c',
             citizenId: c2.id, serviceId: svcPermisoId, type: 'procedure' as const,
             status: 'in_progress' as const, priority: '2' as const,
             subject: 'Renovación de Licencia Comercial — Local Av. Corrientes 1234',
@@ -251,6 +259,7 @@ async function main() {
             createdAt: hoursAgo(36), dueAt: hoursFromNow(8),   // AT RISK
         },
         {
+            id: '6e15d8be-7c38-4eac-93d3-1a052ff9a5e2',
             citizenId: c3?.id ?? c1.id, serviceId: svcReclamoId, type: 'case' as const,
             status: 'pending' as const, priority: '1' as const,
             subject: 'Falta de alumbrado público — Barrio Nueva Esperanza',
@@ -258,6 +267,7 @@ async function main() {
             createdAt: hoursAgo(3), dueAt: hoursFromNow(-2),   // OVERDUE
         },
         {
+            id: 'e7135eec-4a37-4bce-bea8-2de9efab42bd',
             citizenId: c4?.id ?? c1.id, serviceId: svcActualizId, type: 'procedure' as const,
             status: 'pending' as const, priority: '4' as const,
             subject: 'Actualización de domicilio — Mudanza al barrio Palermo',
@@ -265,6 +275,7 @@ async function main() {
             createdAt: hoursAgo(1), dueAt: hoursFromNow(115),  // ON TIME
         },
         {
+            id: 'd6ae4bf8-1d22-44f2-9844-482a472a44b8',
             citizenId: c5?.id ?? c2.id, serviceId: svcReclamoId, type: 'case' as const,
             status: 'waiting_citizen' as const, priority: '3' as const,
             subject: 'Solicitud de baja de habilitación comercial',
@@ -272,6 +283,7 @@ async function main() {
             createdAt: hoursAgo(48), dueAt: hoursFromNow(20),  // AT RISK
         },
         {
+            id: 'f4b3f886-f33e-432d-9eb5-538be14022bf',
             citizenId: c1.id, serviceId: svcPermisoId, type: 'procedure' as const,
             status: 'resolved' as const, priority: '3' as const,
             subject: 'Alta de habilitación para lavadero de autos',
@@ -279,6 +291,7 @@ async function main() {
             createdAt: hoursAgo(200), dueAt: hoursAgo(50),     // Cerrado
         },
         {
+            id: 'c179c379-3d07-4e78-bad6-ebcd8c7e97d4',
             citizenId: c2.id, serviceId: svcReclamoId, type: 'case' as const,
             status: 'in_progress' as const, priority: '2' as const,
             subject: 'Contenedores de basura desbordados — Manzana 14',
@@ -289,7 +302,7 @@ async function main() {
     ]
 
     for (const r of requestsData) {
-        await db.insert(request).values(r).onConflictDoNothing()
+        await db.insert(request).values(r).onConflictDoNothing({ target: [request.id] })
     }
     console.log(`  ✅ ${requestsData.length} requests creados`)
 
