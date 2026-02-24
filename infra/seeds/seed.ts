@@ -14,6 +14,9 @@ const {
     slaPolicy,
     citizen,
     citizenIdentifier,
+    citizenContact,
+    address,
+    citizenAddress,
     request,
 } = schema
 
@@ -148,6 +151,14 @@ async function main() {
         { fullName: 'Roberto Alejandro Díaz', birthDate: new Date('1968-01-30') },
         { fullName: 'Claudia Patricia Vega', birthDate: new Date('1995-06-18') },
     ]
+    const citizensContacts = [
+        { email: 'mfgonzalez@gmail.com', phone: '+54 11 4523-7891', street: 'Av. Corrientes', nro: '1234', city: 'CABA', province: 'Capital Federal' },
+        { email: 'jcrodriguez@gmail.com', phone: '+54 11 5634-2198', street: 'Rivadavia', nro: '890', city: 'Buenos Aires', province: 'Buenos Aires' },
+        { email: 'alamartinez@hotmail.com', phone: '+54 351 4812-3456', street: 'San Martín', nro: '567', city: 'Córdoba', province: 'Córdoba' },
+        { email: 'radiaz@gmail.com', phone: '+54 341 4756-3421', street: 'Mitre', nro: '456', city: 'Rosario', province: 'Santa Fe' },
+        { email: 'cpvega@yahoo.com', phone: '+54 261 4923-7654', street: 'Belgrano', nro: '234', city: 'Mendoza', province: 'Mendoza' },
+    ]
+
     const insertedCitizens = []
     const dnis = ['24593102', '18456789', '33211789', '12867345', '40125678']
     for (let i = 0; i < citizensData.length; i++) {
@@ -156,16 +167,67 @@ async function main() {
             await db.insert(citizenIdentifier).values({
                 citizenId: c.id, type: 'dni', number: dnis[i]!, isVerified: true, verifiedAt: new Date()
             }).onConflictDoNothing()
+
+            // 7.1 Contactos
+            const contactData = citizensContacts[i]!
+            await db.insert(citizenContact).values([
+                { citizenId: c.id, type: 'email' as const, value: contactData.email, isPrimary: true, isVerified: true },
+                { citizenId: c.id, type: 'phone' as const, value: contactData.phone, isPrimary: false, isVerified: true },
+                { citizenId: c.id, type: 'whatsapp' as const, value: contactData.phone, isPrimary: false, isVerified: false },
+            ]).onConflictDoNothing()
+
+            // 7.2 Domicilios
+            const [addr] = await db.insert(address).values({
+                street: contactData.street,
+                houseNumber: contactData.nro,
+                city: contactData.city,
+                province: contactData.province,
+            }).onConflictDoNothing().returning()
+
+            if (addr) {
+                await db.insert(citizenAddress).values({
+                    citizenId: c.id,
+                    addressId: addr.id,
+                    isPrimary: true,
+                }).onConflictDoNothing()
+            }
+
             insertedCitizens.push(c)
         }
     }
-    // Fallback si ya existían
+    // Fallback si ya existían (para correr el seed múltiples veces)
     if (insertedCitizens.length === 0) {
-        const existing = await db.query.citizen.findMany({ limit: 5 })
+        const existing = await db.query.citizen.findMany({ orderBy: (citizen, { asc }) => [asc(citizen.createdAt)], limit: 5 })
         insertedCitizens.push(...existing)
+
+        // Agregar info a los existentes, por idempotencia
+        for (let i = 0; i < insertedCitizens.length; i++) {
+            const c = insertedCitizens[i]!
+            const contactData = citizensContacts[i]!
+            await db.insert(citizenContact).values([
+                { citizenId: c.id, type: 'email' as const, value: contactData.email, isPrimary: true, isVerified: true },
+                { citizenId: c.id, type: 'phone' as const, value: contactData.phone, isPrimary: false, isVerified: true },
+                { citizenId: c.id, type: 'whatsapp' as const, value: contactData.phone, isPrimary: false, isVerified: false },
+            ]).onConflictDoNothing()
+
+            const [addr] = await db.insert(address).values({
+                street: contactData.street,
+                houseNumber: contactData.nro,
+                city: contactData.city,
+                province: contactData.province,
+            }).onConflictDoNothing().returning()
+
+            if (addr) {
+                await db.insert(citizenAddress).values({
+                    citizenId: c.id,
+                    addressId: addr.id,
+                    isPrimary: true,
+                }).onConflictDoNothing()
+            }
+        }
     }
     const [c1, c2, c3, c4, c5] = insertedCitizens
-    console.log(`  ✅ ${insertedCitizens.length} ciudadanos creados`)
+    console.log(`  ✅ ${insertedCitizens.length} ciudadanos actualizados/creados con contactos y direcciones`)
 
     if (!c1 || !c2) { console.log('⚠️  No hay suficientes ciudadanos para crear requests'); await pool.end(); return }
 
