@@ -13,11 +13,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-    { href: '/dashboard', icon: 'home', label: 'Inicio' },
-    { href: '/dashboard/bandeja', icon: 'inbox', label: 'Bandeja', badge: 12 },
-    { href: '/dashboard/ciudadanos', icon: 'people', label: 'Ciudadanos' },
-    { href: '/dashboard/casos', icon: 'folder_open', label: 'Casos' },
-    { href: '/dashboard/reportes', icon: 'bar_chart', label: 'Reportes' },
+    { href: '/', icon: 'home', label: 'Inicio' },
+    { href: '/bandeja', icon: 'inbox', label: 'Bandeja', badge: 12 },
+    { href: '/ciudadanos', icon: 'people', label: 'Ciudadanos' },
+    { href: '/casos', icon: 'folder_open', label: 'Casos' },
+    { href: '/reportes', icon: 'bar_chart', label: 'Reportes' },
 ]
 
 interface SidebarProps {
@@ -87,7 +87,7 @@ export function Sidebar({ userInitials, userName, userRole }: SidebarProps) {
             {/* Footer: settings + user */}
             <div className="border-t border-white/10">
                 <Link
-                    href="/dashboard/configuracion"
+                    href="/configuracion"
                     className={`flex items-center h-12 w-full text-slate-300 hover:text-white hover:bg-white/5 transition-colors
                         ${expanded ? 'px-4 gap-3' : 'justify-center'}`}
                     title={!expanded ? 'Configuración' : undefined}

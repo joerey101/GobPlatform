@@ -8,7 +8,7 @@ export function TableRow({ id, children }: { id: string; children: React.ReactNo
 
     return (
         <tr
-            onClick={() => router.push(`/dashboard/bandeja/${id}`)}
+            onClick={() => router.push(`/bandeja/${id}`)}
             className="cursor-pointer transition-colors hover:bg-slate-50"
         >
             {children}
