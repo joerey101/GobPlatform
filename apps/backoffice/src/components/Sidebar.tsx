@@ -44,7 +44,7 @@ export function Sidebar({ userInitials, userName, userRole }: SidebarProps) {
             {/* Nav */}
             <nav className="flex-1 py-4 overflow-y-auto">
                 {navItems.map(({ href, icon, label, badge }) => {
-                    const isActive = pathname === href || pathname.startsWith(href + '/')
+                    const isActive = pathname === href || (pathname?.startsWith(href + '/') ?? false)
                     return (
                         <Link
                             key={href}

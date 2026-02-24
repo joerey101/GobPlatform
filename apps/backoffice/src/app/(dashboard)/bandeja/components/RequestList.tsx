@@ -20,9 +20,9 @@ export function RequestList({ requests, selectedId, onSelect, totalCount }: Requ
         if (!searchTerm) return true
         const term = searchTerm.toLowerCase()
         return (
-            req.subject.toLowerCase().includes(term) ||
-            req.citizenFullName.toLowerCase().includes(term) ||
-            req.id.toLowerCase().includes(term)
+            (req.subject?.toLowerCase() || '').includes(term) ||
+            (req.citizenFullName?.toLowerCase() || '').includes(term) ||
+            (req.id?.toLowerCase() || '').includes(term)
         )
     })
 
@@ -94,7 +94,7 @@ export function RequestList({ requests, selectedId, onSelect, totalCount }: Requ
                                         </span>
                                         <span className="text-slate-300">•</span>
                                         <span className="text-[10px] font-mono text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 uppercase tracking-wider">
-                                            {req.id.split('-')[0]}
+                                            {req.id?.split('-')[0]}
                                         </span>
                                     </div>
 
