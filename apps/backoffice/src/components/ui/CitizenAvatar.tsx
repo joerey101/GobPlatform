@@ -13,9 +13,10 @@ const badgeTextSize = { sm: 'text-xl', md: 'text-3xl', lg: 'text-3xl', xl: 'text
 
 
 export function CitizenAvatar({ src, name, fullName, verified, pending, size = 'md' }: CitizenAvatarProps) {
+    console.log('CitizenAvatar rendering with:', { name, fullName })
     const displayName = fullName || name
     const initials = displayName
-        ? displayName.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()
+        ? displayName.split(' ').filter(Boolean).slice(0, 2).map((n: string) => n[0]).join('').toUpperCase()
         : '?'
 
     return (
@@ -23,6 +24,8 @@ export function CitizenAvatar({ src, name, fullName, verified, pending, size = '
             <div className={`${sizeClasses[size]} rounded-full bg-slate-200 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm`}>
                 {src ? (
                     <img src={src} alt={displayName ?? 'Citizen'} className="w-full h-full object-cover" />
+                ) : initials !== '?' ? (
+                    <span className={`text-[#2c6bc3] font-bold tracking-wide ${badgeTextSize[size] === 'text-5xl' ? 'text-4xl' : badgeTextSize[size] === 'text-3xl' ? 'text-2xl' : 'text-sm'}`}>{initials}</span>
                 ) : (
                     <span className={`material-symbols-outlined text-slate-400 ${badgeTextSize[size]}`}>person</span>
                 )}
