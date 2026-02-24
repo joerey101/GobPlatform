@@ -268,11 +268,11 @@ Preferir `db.query.*` para queries con relaciones.
    [x] Seed: 3 servicios, 13 SLA policies, 5 ciudadanos, 7 requests
    [x] getRequests() query en packages/db/src/queries/bandeja.ts
 
-🚀 FASE 3b — Gestión de Casos (PRÓXIMA)
-   [ ] /bandeja/[id] → perfil 360° ciudadano + timeline (tokens_3)
-   [ ] /casos/[id]   → flujo de trabajo del caso (tokens_4)
-   [ ] /casos/[id] tab IA → panel sugerencias Claude API (tokens_5)
-   [ ] Asignación y cambio de estado con audit_event
+🚀 FASE 3b — Gestión de Casos (EN PROGRESO)
+   [x] /bandeja/[id] → perfil 360° ciudadano + timeline (tokens_3)
+   [x] /casos/[id]   → flujo de trabajo del caso (tokens_4)
+   [x] /casos/[id] tab IA → panel sugerencias Claude API (tokens_5)
+   [x] Asignación y cambio de estado con audit_event
 
 🔲 FASE 4 — Portal del Ciudadano
 🔲 FASE 5 — Turnos, Territorio y Pagos

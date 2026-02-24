@@ -33,7 +33,7 @@ function formatDate(d: Date) {
     }).format(new Date(d))
 }
 
-export default async function CaseDetailPage({ params }: { params: { id: string } }) {
+export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = await params
     const id = resolvedParams.id
     const detail = await fetchCaseDetail(id)

@@ -7,7 +7,7 @@ import {
     slaPolicy,
     internalUser,
 } from '@repo/db'
-import { eq, asc, desc } from 'drizzle-orm'
+import { eq, asc, desc } from '@repo/db'
 import { SLABadge } from '@/components/ui/SLABadge'
 import { PriorityIndicator } from '@/components/ui/PriorityIndicator'
 import { StatusBadge } from '@/components/ui/StatusBadge'

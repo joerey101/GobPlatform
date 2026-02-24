@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { db, aiSuggestion, auditEvent } from '@repo/db'
-import { eq } from 'drizzle-orm'
+import { eq } from '@repo/db'
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth()
         const sessionUserId = (session as any)?.id || null

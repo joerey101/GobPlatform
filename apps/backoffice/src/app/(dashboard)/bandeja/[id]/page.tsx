@@ -32,7 +32,7 @@ function formatDate(d: Date) {
     }).format(d)
 }
 
-export default async function RequestDetailPage({ params }: { params: { id: string } }) {
+export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
     // Next 15 requiere que params sea un awaited para dynamic routes
     const resolvedParams = await params
     const id = resolvedParams.id

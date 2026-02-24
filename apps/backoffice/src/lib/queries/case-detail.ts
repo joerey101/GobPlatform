@@ -12,7 +12,7 @@ import {
     document,
     internalUser,
 } from '@repo/db'
-import { eq, desc, asc } from 'drizzle-orm'
+import { eq, desc, asc } from '@repo/db'
 
 export async function fetchCaseDetail(requestId: string) {
     const reqRows = await db

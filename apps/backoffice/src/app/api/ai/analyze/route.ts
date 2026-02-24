@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { db, request, caseTable, citizen, serviceCatalog } from '@repo/db'
-import { eq } from 'drizzle-orm'
+import { eq } from '@repo/db'
 import { getOrInsertAiModel, createAiRun, insertAiSuggestions, markAiRunFailed, markAiRunEnded } from '@/lib/queries/ai-queries'
 
 export async function POST(req: Request) {

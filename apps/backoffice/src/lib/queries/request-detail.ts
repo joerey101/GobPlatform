@@ -13,7 +13,7 @@ import {
     interaction,
     internalUser,
 } from '@repo/db'
-import { eq, desc, and } from 'drizzle-orm'
+import { eq, desc, and } from '@repo/db'
 
 export async function fetchRequestDetail(requestId: string) {
     // Definir la query principal en un builder para obtener 1 fila real

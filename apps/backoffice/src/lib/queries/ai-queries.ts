@@ -1,6 +1,6 @@
 import { db } from '@repo/db'
 import { aiModel, aiRun, aiSuggestion } from '@repo/db'
-import { eq, and } from 'drizzle-orm'
+import { eq, and } from '@repo/db'
 
 /**
  * Obtiene o inserta el modelo Claude Sonnet 3.5 en la base de datos de modelos IA

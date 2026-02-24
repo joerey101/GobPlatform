@@ -3,3 +3,5 @@ export * from './schema/index'
 export * from './queries/users'
 export * from './queries/bandeja'
 export type { Database } from './client'
+
+export { eq, desc, asc, and, or, sql, count } from 'drizzle-orm'

@@ -3,7 +3,7 @@
 import { z } from 'zod'
 import { db } from '@repo/db'
 import { request, auditEvent, assignmentHistory, workItem } from '@repo/db'
-import { eq } from 'drizzle-orm'
+import { eq } from '@repo/db'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 

@@ -92,15 +92,32 @@ No usar `npm run dev` desde la raíz sin turbo.
 
 ---
 
-### 🚀 Próximo — Fase 3b
+### ✅ Fase 3b — Gestión de Casos (Inicio)
 
-| Ruta | Descripción | HTML de referencia |
-|---|---|---|
-| `/bandeja/[id]` | Perfil 360° ciudadano + timeline de interacciones | `tokens_3` |
-| `/casos/[id]` | Flujo de pasos del caso + work_items | `tokens_4` |
-| `/casos/[id]` tab IA | Panel sugerencias Claude API | `tokens_5` |
+**Ruta:** `/bandeja/[id]` (Perfil 360° Ciudadano)
+**Acciones Completadas:**
+- Consulta relacional `fetchRequestDetail` implementada en Drizzle (obtiene Citizen, Address, Contact, Interacciones, SLAs, Service y OrgUnit).
+- Componente Server Component construido en base a layout original.
+- Adaptación de `CitizenAvatar` para soportar tamaño `xl`.
+- Adaptación de `ChannelBadge` para mapear el estado `in_person`.
+- Evento de auditoría insertado al cargar la página (acción `view`).
 
-Al iniciar la próxima sesión: *"Estamos en Fase 3b — arranquemos con `/bandeja/[id]`, el perfil del ciudadano, basado en `tokens_3/code.html`"*
+**Ruta:** `/casos/[id]` (Flujo de trabajo de caso)
+**Acciones Completadas:**
+- Consulta relacional `fetchCaseDetail` listando las tareas (work_items), el summary de incidentes, historial de asignaciones y documentos adjuntos.
+- Server Actions (`updateRequestStatus`, `createWorkItem`, `assignRequest`) con validación Zod.
+- Registro estricto e inalterable en la tabla `audit_event` insertado de manera transaccional.
+- Componente visual `WorkflowStepper` para dibujar línea de tiempo de tareas vertical animada.
+- Panel derecho cliente (`CaseActionsPanel`) para las interacciones.
+
+**Ruta:** `/casos/[id]` Tab IA (Sugerencias GobAI)
+**Acciones Completadas:**
+- Modelos trazables en tabla `ai_model`, ejecuciones en `ai_run` y almacenamiento de contexto/estado en `ai_suggestion`.
+- API Route `/api/ai/analyze` POST llamando a Claude 3.5 Sonnet integrando el prompt en `JSON` puro con el contexto detallado de la base de datos (service, detail, user).
+- API Route `/api/ai/suggestions/[id]` PATCH para aceptar/rechazar/editar las sugerencias e integrarlas a `audit_event`.
+- Creación de Wrapper `<RightPanelWrapper/>` implementando renderizado condicional mediante Tabs entre 'Operaciones' y 'GobAI'.
+- Server-side keys: La KEY se aloja en Route Handler y no llega al cliente.
+- Creación de `<AIPanel/>` Cliente mapeando ConfidenceBars, sugerencias editables de borrador de mail con switchers de tono y manejo del esqueleto dinámico de loading.
 
 ---
 
