@@ -208,6 +208,13 @@ interface OperatorSession {
 
 ## Reglas de desarrollo — cumplir siempre
 
+### REGLA DE COMMITS — obligatoria desde v0.4
+- Durante una sesión de trabajo: acumular todos los cambios localmente
+- UN solo commit y push al cerrar la sesión o al terminar un módulo completo
+- NUNCA hacer push después de cada fix individual
+- Vercel tiene límite de 100 deployments/día — cada push dispara uno automático
+- Excepción: si hay un bug crítico en producción que bloquea usuarios reales
+
 ### 1. audit_event en toda mutación importante
 ```typescript
 await db.insert(auditEvent).values({

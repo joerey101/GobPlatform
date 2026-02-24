@@ -126,6 +126,27 @@ No usar `npm run dev` desde la raíz sin turbo.
 - **Drizzle ORM Workspace Conflict**: Purificada la instanciación duplicada de la librería. Las utilerías SQL (`eq`, `desc`, `and`) pasaron a exportarse nativamente desde el package `@repo/db/src/index.ts` estabilizando la compilación `next build` en producción (Exit Code 0).
 - **Next.js Route Group Pathing**: Restauradas las URIs que devolvían 404. El agrupador `(dashboard)` fue purgado del `<Sidebar>` y el `<TableRow>` para alinear el push de URL con el árbol físico de rutas de la aplicación.
 
+### ⚠️ Estado Deploy Vercel — Límite Plan Hobby Alcanzado (24 Feb 2026)
+
+**Problema:** Vercel alcanzó el límite de **100 deploys diarios** del plan Hobby. Error reportado: `api-deployments-free-per-day`.
+
+**Deploy activo en producción:** commit `b50aa84` (seed de contactos).
+
+**Commits en GitHub PERO NO desplegados en Vercel:**
+- `5f480b1` — Fix iniciales `CitizenAvatar` 
+- `fbcebb6` — Trigger vacío (fix complementario)
+
+**Opciones para continuar el deploy:**
+1. **Esperar** ~16h para que se reinicie el contador de Vercel (gratis).
+2. **Vercel CLI** (bypass del límite de API automática):
+   ```bash
+   npx vercel --prod
+   ```
+   *(requiere autenticación interactiva en la terminal del usuario)*
+3. **Upgrade a Pro** ($20/mes — deploys ilimitados).
+
+**Estado local:** Todo funciona en `http://localhost:4001`. Los cambios del Avatar están correctos en el código, solo esperan que Vercel los procese.
+
 ---
 
 ## v0.2 — Fase 2a — Auth + DB (sesión anterior)
