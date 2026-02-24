@@ -63,7 +63,6 @@ export function RequestTabs({ detail }: RequestTabsProps) {
                             <CitizenAvatar
                                 size="xl"
                                 fullName={detail.citizenFullName}
-                                dni={detail.citizenDni}
                             />
                             <h2 className="mt-4 text-xl font-bold text-slate-800 tracking-tight">
                                 {detail.citizenFullName}
