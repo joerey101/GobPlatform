@@ -12,6 +12,8 @@ import { SLABadge } from '@/components/ui/SLABadge'
 import { PriorityIndicator } from '@/components/ui/PriorityIndicator'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 
+import { TableRow } from './components/TableRow'
+
 // ─── SLA runtime helper ─────────────────────────────────────────────────────
 type SlaStatus = 'on_time' | 'at_risk' | 'overdue'
 
@@ -131,10 +133,7 @@ export default async function BandejaPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-100 text-sm">
                                 {requests.map((req) => (
-                                    <tr
-                                        key={req.id}
-                                        className="cursor-pointer transition-colors hover:bg-slate-50"
-                                    >
+                                    <TableRow key={req.id} id={req.id}>
                                         <td className="px-6 py-4">
                                             <input className="rounded border-slate-300" type="checkbox" />
                                         </td>
@@ -166,7 +165,7 @@ export default async function BandejaPage() {
                                         <td className="px-6 py-4 text-right text-xs text-slate-500">
                                             {req.relativeDate}
                                         </td>
-                                    </tr>
+                                    </TableRow>
                                 ))}
                             </tbody>
                         </table>
