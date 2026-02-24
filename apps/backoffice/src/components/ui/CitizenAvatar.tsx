@@ -3,11 +3,12 @@ interface CitizenAvatarProps {
     name?: string
     verified?: boolean
     pending?: boolean
-    size?: 'sm' | 'md' | 'lg'
+    size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
-const sizeClasses = { sm: 'size-9', md: 'size-14', lg: 'size-24' }
-const badgeTextSize = { sm: 'text-xl', md: 'text-3xl', lg: 'text-3xl' }
+const sizeClasses = { sm: 'size-9', md: 'size-14', lg: 'size-24', xl: 'size-32' }
+const badgeTextSize = { sm: 'text-xl', md: 'text-3xl', lg: 'text-3xl', xl: 'text-5xl' }
+
 
 export function CitizenAvatar({ src, name, verified, pending, size = 'md' }: CitizenAvatarProps) {
     const initials = name

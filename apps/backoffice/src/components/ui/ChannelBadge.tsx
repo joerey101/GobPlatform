@@ -1,4 +1,4 @@
-type Channel = 'whatsapp' | 'email' | 'web' | 'presencial'
+type Channel = 'whatsapp' | 'email' | 'web' | 'in_person'
 
 const WhatsAppIcon = () => (
     <svg fill="currentColor" height="14" width="14" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -10,7 +10,7 @@ const channels: Record<Channel, { label: string; icon: React.ReactNode; iconClas
     whatsapp: { label: 'WhatsApp', icon: <WhatsAppIcon />, iconClass: 'text-[#25D366]' },
     email: { label: 'Email', icon: <span className="material-symbols-outlined text-sm text-slate-500">mail</span>, iconClass: '' },
     web: { label: 'Portal Web', icon: <span className="material-symbols-outlined text-sm text-primary">language</span>, iconClass: '' },
-    presencial: { label: 'Presencial', icon: <span className="material-symbols-outlined text-sm text-slate-500">storefront</span>, iconClass: '' },
+    in_person: { label: 'Presencial', icon: <span className="material-symbols-outlined text-sm text-slate-500">storefront</span>, iconClass: '' },
 }
 
 export function ChannelBadge({ channel }: { channel: Channel }) {
