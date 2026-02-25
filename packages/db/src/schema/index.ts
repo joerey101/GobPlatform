@@ -121,7 +121,9 @@ export const citizenIdentifier = pgTable(
         verifiedAt: timestamp('verified_at', { withTimezone: true }),
         ...timestamps,
     },
-    (t) => [unique().on(t.type, t.number)]
+    (t) => ({
+        unq_citizen_identifier: unique().on(t.type, t.number),
+    })
 )
 
 /**
@@ -334,12 +336,12 @@ export const request = pgTable(
         dueAt: timestamp('due_at', { withTimezone: true }),
         ...timestamps,
     },
-    (t) => [
-        index('idx_request_citizen').on(t.citizenId),
-        index('idx_request_status').on(t.status),
-        index('idx_request_assigned_user').on(t.assignedUserId),
-        index('idx_request_due').on(t.dueAt),
-    ]
+    (t) => ({
+        idx_request_citizen: index('idx_request_citizen').on(t.citizenId),
+        idx_request_status: index('idx_request_status').on(t.status),
+        idx_request_assigned_user: index('idx_request_assigned_user').on(t.assignedUserId),
+        idx_request_due: index('idx_request_due').on(t.dueAt),
+    })
 )
 
 /**
@@ -390,7 +392,9 @@ export const interaction = pgTable(
         durationSeconds: integer('duration_seconds'),
         ...timestamps,
     },
-    (t) => [index('idx_interaction_request').on(t.requestId)]
+    (t) => ({
+        idx_interaction_request: index('idx_interaction_request').on(t.requestId),
+    })
 )
 
 /**
@@ -412,7 +416,9 @@ export const workItem = pgTable(
         completedAt: timestamp('completed_at', { withTimezone: true }),
         ...timestamps,
     },
-    (t) => [index('idx_work_item_request').on(t.requestId)]
+    (t) => ({
+        idx_work_item_request: index('idx_work_item_request').on(t.requestId),
+    })
 )
 
 /**
@@ -481,7 +487,9 @@ export const slaPolicy = pgTable(
         isActive: boolean('is_active').notNull().default(true),
         ...timestamps,
     },
-    (t) => [unique().on(t.serviceId, t.priority)]
+    (t) => ({
+        unq_service_priority: unique().on(t.serviceId, t.priority),
+    })
 )
 
 /**
@@ -505,7 +513,9 @@ export const notification = pgTable(
         externalId: text('external_id'), // ID de proveedor (Resend, Twilio, etc.)
         ...timestamps,
     },
-    (t) => [index('idx_notification_citizen').on(t.citizenId)]
+    (t) => ({
+        idx_notification_citizen: index('idx_notification_citizen').on(t.citizenId),
+    })
 )
 
 /**
@@ -540,11 +550,11 @@ export const auditEvent = pgTable(
         metadataJson: text('metadata_json'), // JSON con contexto adicional
         createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     },
-    (t) => [
-        index('idx_audit_entity').on(t.entityType, t.entityId),
-        index('idx_audit_actor_user').on(t.actorUserId),
-        index('idx_audit_created').on(t.createdAt),
-    ]
+    (t) => ({
+        idx_audit_entity: index('idx_audit_entity').on(t.entityType, t.entityId),
+        idx_audit_actor_user: index('idx_audit_actor_user').on(t.actorUserId),
+        idx_audit_created: index('idx_audit_created').on(t.createdAt),
+    })
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -554,14 +564,20 @@ export const auditEvent = pgTable(
 /**
  * ai_model — Catálogo de modelos LLM utilizados
  */
-export const aiModel = pgTable('ai_model', {
-    id: uuid('id').primaryKey().defaultRandom(),
-    provider: text('provider').notNull(), // 'anthropic', 'openai', etc.
-    name: text('name').notNull(), // 'claude-sonnet-4'
-    version: text('version').notNull(), // '20250514'
-    isActive: boolean('is_active').notNull().default(true),
-    ...timestamps,
-}, (t) => [unique().on(t.provider, t.name, t.version)])
+export const aiModel = pgTable(
+    'ai_model',
+    {
+        id: uuid('id').primaryKey().defaultRandom(),
+        provider: text('provider').notNull(), // 'anthropic', 'openai', etc.
+        name: text('name').notNull(), // 'claude-sonnet-4'
+        version: text('version').notNull(), // '20250514'
+        isActive: boolean('is_active').notNull().default(true),
+        ...timestamps,
+    },
+    (t) => ({
+        unq_ai_model: unique().on(t.provider, t.name, t.version),
+    })
+)
 
 /**
  * ai_run — Registro de ejecución y trazabilidad del LLM

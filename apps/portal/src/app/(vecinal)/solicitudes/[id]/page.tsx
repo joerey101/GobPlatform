@@ -1,7 +1,8 @@
 import { ArrowLeft, Bell, User, Clock, FileText, MapPin, History, MessageSquare, PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 
-export default function RequestDetailPage({ params }: { params: { id: string } }) {
+export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     // Hardcoded data as requested
     const request = {
         id: '#REQ-2023-8492',
