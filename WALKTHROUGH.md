@@ -3,6 +3,35 @@
 
 ---
 
+## v0.4 — Cierre de Fase 4 (24 Feb 2026)
+**Rama:** `main`
+
+### ✅ Fase 4 — Portal Vecinal (MVP Visual)
+
+**Autenticación Ciudadana:**
+- Implementación de `citizen_auth` en DB y NextAuth v5 con proveedor de Credenciales (CUIL/CUIT + Password).
+- Middleware de protección para rutas `(vecinal)/*`.
+- Algoritmo de validación de CUIL/CUIT integrado.
+
+**Dashboard y Navegación:**
+- Header persistente con perfil y notificaciones.
+- Bottom Navigation funcional para dispositivos móviles.
+- Dashboard con accesos rápidos a trámites y estado de solicitudes recientes.
+
+**Pantallas Visuales (Glassmorphism UI):**
+1. **Mis Solicitudes:** Lista de pedidos con estados (En Proceso, Pendiente, Resuelto) y badges de SLA.
+2. **Detalle de Solicitud:** Vista 360° con descripción, mapa (placeholder) y línea de tiempo de interacciones.
+3. **Nueva Solicitud:** Flujo multi-paso (Servicio → Detalle → Resumen) con validación de estado y stepper sticky.
+4. **Notificaciones:** Lista interactiva con marcado de lectura y contador dinámico.
+5. **Perfil:** Gestión de datos personales, contacto y domicilio con modo edición inline.
+
+**Estado Técnico:**
+- **Datos:** Hardcodeados para demostración visual. La integración real con DB está pendiente para la Fase 5.
+- **Estética:** Sistema de diseño basado en v4 Utilities (`glass-card`, `bg-soft-gradient`).
+- **Despliegue Local:** Funcionando en `http://localhost:4000`.
+
+---
+
 ## v0.3 — Cierre de Fase 3a (23 Feb 2026)
 **Commit:** `49ebe89` | **Rama:** `main`
 

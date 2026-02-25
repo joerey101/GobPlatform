@@ -15,6 +15,7 @@ const {
     slaPolicy,
     citizen,
     citizenIdentifier,
+    citizenAuth,
     citizenContact,
     address,
     citizenAddress,
@@ -145,6 +146,7 @@ async function main() {
 
     // ─── 7. Citizens ────────────────────────────────────────────────────────────
     console.log('→ Seeding citizens...')
+    const citizenPasswordHash = await bcrypt.hash('Vecino2024!', 12)
     const citizensData = [
         { fullName: 'María Fernanda González', birthDate: new Date('1985-03-12') },
         { fullName: 'Juan Carlos Rodríguez', birthDate: new Date('1972-08-25') },
@@ -198,6 +200,13 @@ async function main() {
                 const cuil = generateCUIL(dni, gender)
                 await db.insert(citizenIdentifier).values({
                     citizenId: c.id, type: 'cuil', number: cuil, isVerified: true, verifiedAt: new Date()
+                }).onConflictDoNothing()
+
+                // Insert into citizen_auth
+                await db.insert(citizenAuth).values({
+                    citizenId: c.id,
+                    cuil: cuil,
+                    passwordHash: citizenPasswordHash,
                 }).onConflictDoNothing()
             }
 

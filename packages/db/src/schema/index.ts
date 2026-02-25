@@ -209,6 +209,20 @@ export const consent = pgTable('consent', {
     ...timestamps,
 })
 
+/**
+ * citizen_auth — Credenciales de acceso al Portal Vecinal
+ */
+export const citizenAuth = pgTable('citizen_auth', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    citizenId: uuid('citizen_id')
+        .notNull()
+        .unique()
+        .references(() => citizen.id, { onDelete: 'cascade' }),
+    cuil: text('cuil').notNull().unique(),
+    passwordHash: text('password_hash').notNull(),
+    ...timestamps,
+})
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ORGANIZACIÓN DEL ESTADO (5 tablas)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -583,7 +597,7 @@ export const aiSuggestion = pgTable('ai_suggestion', {
 // RELATIONS (Drizzle relational queries)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const citizenRelations = relations(citizen, ({ many }) => ({
+export const citizenRelations = relations(citizen, ({ one, many }) => ({
     identifiers: many(citizenIdentifier),
     contacts: many(citizenContact),
     addresses: many(citizenAddress),
@@ -593,6 +607,11 @@ export const citizenRelations = relations(citizen, ({ many }) => ({
     requests: many(request),
     interactions: many(interaction),
     notifications: many(notification),
+    auth: one(citizenAuth, { fields: [citizen.id], references: [citizenAuth.citizenId] }),
+}))
+
+export const citizenAuthRelations = relations(citizenAuth, ({ one }) => ({
+    citizen: one(citizen, { fields: [citizenAuth.citizenId], references: [citizen.id] }),
 }))
 
 export const citizenRelationRelations = relations(citizenRelation, ({ one }) => ({
